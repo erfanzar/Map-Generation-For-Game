@@ -3,7 +3,8 @@
     "id": 0,
     "x": 59,
     "y": 67,
-    "level": "#97493a"
+    "level": "#97493a",
+    "status_in_map": "0,lowest"
   },
   {
     "id": 1,
@@ -6429,7 +6430,8 @@
     "id": 1071,
     "x": 282,
     "y": 304,
-    "level": "#7d4b33"
+    "level": "#7d4b33",
+    "status_in_map": "1,highest"
   },
   {
     "id": 1072,

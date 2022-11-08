@@ -183,3 +183,53 @@ def new_location(inputs: dict = None, prp: [float, int] = 1.5,
 def save_json(path: [str, os.PathLike] = 'save.json', data: [list, dict] = None):
     with open(path, 'w') as w:
         json.dump(data, w)
+
+
+def calculate_distance(data: dict = None):
+    subway = loop_find(data, looks=['x', 'y', 'id'], must='inp.get("usage") == "subway"')
+    teleports = loop_find(data, looks=['x', 'y', 'id'], must='inp.get("usage") == "teleports"')
+    festival = loop_find(data, looks=['x', 'y', 'id'], must='inp.get("usage") == "festival"')
+    lobby = loop_find(data, looks=['x', 'y', 'id'], must='inp.get("usage") == "lobby"')
+    subway_array = np.array([subway.x, subway.y]).T
+    teleports_array = np.array([teleports.x, teleports.y]).T
+    festival_array = np.array([festival.x, festival.y]).T
+    lobby_array = np.array([lobby.x, lobby.y]).T
+    subway_mean = [np.mean(ix) for ix in subway_array]
+    teleports_mean = [np.mean(ix) for ix in teleports_array]
+    festival_mean = [np.mean(ix) for ix in festival_array]
+    lobby_mean = [np.mean(ix) for ix in lobby_array]
+    min_distance = 0
+    max_distance = 290.2
+    for i, d in enumerate(data):
+        x = d['x']
+        y = d['y']
+        d_a = np.array([x, y]).T
+        d_m = np.mean(d_a) / max_distance
+        ls, lt, lf, ll = 110, 110, 110, 110
+        lsi, lti, lfi, lli = 0, 0, 0, 0
+        for index, s in enumerate(subway_mean):
+            cal = abs(d_m - s)
+            lsi = index if cal < ls else lsi
+            ls = cal if cal < ls else ls
+
+        for index, s in enumerate(teleports_mean):
+            cal = abs(d_m - s)
+            lti = index if cal < lt else lti
+            lt = cal if cal < lt else lt
+
+        for index, s in enumerate(festival_mean):
+            cal = abs(d_m - s)
+            lfi = index if cal < lf else lfi
+            lf = cal if cal < lf else lf
+
+        for index, s in enumerate(lobby_mean):
+            cal = abs(d_m - s)
+            lli = index if cal < ll else lli
+            ll = cal if cal < ll else ll
+
+        data[i]['distance_from_lobby'] = ((lli / max_distance) + d_m) * 100
+        data[i]['distance_from_festival'] = ((lfi / max_distance) + d_m) * 100
+        data[i]['distance_from_teleports'] = ((lti / max_distance) + d_m) * 100
+        data[i]['distance_from_subway'] = ((lsi / max_distance) + d_m) * 100
+        # print(((lli / max_distance) + d_m) * 100)
+    return data

@@ -38,7 +38,7 @@ def main():
         data, x=fs_x, y=fs_y, prp=1.5, usage='festival', level='WLocations'
     )
     print(data)
-    show_loc = loop_find(inputs=data, looks=['x', 'y'], must='True')
+    show_loc = loop_find(inputs=data, looks=['x', 'y'], must='inp.get("level") == "white"')
     llx, lly, _ = [show_loc.x, show_loc.y, show_loc.id]
     x_y_to_image(llx, lly, draw_color_name_hex='green')
 
