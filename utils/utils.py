@@ -4,6 +4,7 @@ import numpy as np
 import os
 import numba as nb
 from webcolors import name_to_rgb, hex_to_rgb
+import math
 
 green = [15, 200, 12]
 blue = [200, 5, 5]
@@ -185,19 +186,28 @@ def save_json(path: [str, os.PathLike] = 'save.json', data: [list, dict] = None)
         json.dump(data, w)
 
 
+def distance(first: np.ndarray, second: np.ndarray):
+    print(first, second)
+    x_axis = first[0] - second[0]
+    y_axis = first[1] - second[1]
+    result = math.sqrt((x_axis ** 2) + (y_axis ** 2))
+    return result
+
+
 def calculate_distance(data: dict = None):
     subway = loop_find(data, looks=['x', 'y', 'id'], must='inp.get("usage") == "subway"')
     teleports = loop_find(data, looks=['x', 'y', 'id'], must='inp.get("usage") == "teleports"')
     festival = loop_find(data, looks=['x', 'y', 'id'], must='inp.get("usage") == "festival"')
-    lobby = loop_find(data, looks=['x', 'y', 'id'], must='inp.get("usage") == "lobby"')
+    lobby = loop_find(data, looks=['x', 'y', 'id'], must='inp.get("lobby") == "true"')
     subway_array = np.array([subway.x, subway.y]).T
     teleports_array = np.array([teleports.x, teleports.y]).T
     festival_array = np.array([festival.x, festival.y]).T
     lobby_array = np.array([lobby.x, lobby.y]).T
-    subway_mean = [np.mean(ix) for ix in subway_array]
-    teleports_mean = [np.mean(ix) for ix in teleports_array]
-    festival_mean = [np.mean(ix) for ix in festival_array]
-    lobby_mean = [np.mean(ix) for ix in lobby_array]
+    # subway_mean = [np.mean(ix) for ix in subway_array]
+    # teleports_mean = [np.mean(ix) for ix in teleports_array]
+    # festival_mean = [np.mean(ix) for ix in festival_array]
+    # lobby_mean = [np.mean(ix) for ix in lobby_array]
+    max_pp = 999999999
     min_distance = 0
     max_distance = 290.2
     for i, d in enumerate(data):
@@ -205,31 +215,37 @@ def calculate_distance(data: dict = None):
         y = d['y']
         d_a = np.array([x, y]).T
         d_m = np.mean(d_a) / max_distance
-        ls, lt, lf, ll = 110, 110, 110, 110
-        lsi, lti, lfi, lli = 0, 0, 0, 0
-        for index, s in enumerate(subway_mean):
-            cal = abs(d_m - s)
-            lsi = index if cal < ls else lsi
+        fp_array = np.array([x, y])
+        # sc_array = np.array()
+        ls, lt, lf, ll = max_pp, max_pp, max_pp, max_pp
+
+        for index, s in enumerate(subway_array):
+            cal = distance(first=fp_array, second=s)
+
             ls = cal if cal < ls else ls
 
-        for index, s in enumerate(teleports_mean):
-            cal = abs(d_m - s)
-            lti = index if cal < lt else lti
+        for index, s in enumerate(teleports_array):
+            cal = distance(first=fp_array, second=s)
+
             lt = cal if cal < lt else lt
 
-        for index, s in enumerate(festival_mean):
-            cal = abs(d_m - s)
-            lfi = index if cal < lf else lfi
-            lf = cal if cal < lf else lf
+        for index, s in enumerate(festival_array):
+            cal = distance(first=fp_array, second=s)
 
-        for index, s in enumerate(lobby_mean):
-            cal = abs(d_m - s)
-            lli = index if cal < ll else lli
+            lf = cal if cal < lf else lf
+        # print('a')
+        for index, s in enumerate(lobby_array):
+            cal = distance(first=fp_array, second=s)
+            # print(cal)
             ll = cal if cal < ll else ll
 
-        data[i]['distance_from_lobby'] = ((lli / max_distance) + d_m) * 100
-        data[i]['distance_from_festival'] = ((lfi / max_distance) + d_m) * 100
-        data[i]['distance_from_teleports'] = ((lti / max_distance) + d_m) * 100
-        data[i]['distance_from_subway'] = ((lsi / max_distance) + d_m) * 100
+        data[i]['distance_from_lobby'] = ll
+
+        data[i]['distance_from_festival'] = lf
+        # pass
+        data[i]['distance_from_teleports'] = lt
+        # pass
+        data[i]['distance_from_subway'] = ls
+        # pass
         # print(((lli / max_distance) + d_m) * 100)
     return data
